@@ -1,7 +1,7 @@
 import argparse
 
 from utils import pdf_processor
-
+from vector_db.vector_db import WeaviateVectorDatabase
 # NOTE - add LLM choice
 def parse_args() -> argparse.Namespace:
     """
@@ -16,6 +16,7 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args, modifiers = parse_args()
+    vector_db = WeaviateVectorDatabase(host='host.docker.internal',port='8080') 
 
 
 if __name__ == "__main__":
