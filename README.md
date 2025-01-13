@@ -11,3 +11,6 @@ The goal of this project is to build a system that combines:
 1. **Vector Search**: Efficiently retrieve relevant information based on embeddings stored in Weaviate.
 2. **Graph Querying**: Explore and leverage complex relationships between entities using Nebula Graph.
 3. **RAG Pipeline**: Integrate the capabilities of both databases to enable effective retrieval-augmented text generation.
+
+## Vector database
+   After running `docker compose up -d` (Docker Compose v2 or later), make sure all containers, including Weaviate and any vectorizer services, are connected to the same Docker network. Use the `docker network` commands to verify and configure network settings if necessary.
