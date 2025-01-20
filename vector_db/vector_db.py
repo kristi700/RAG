@@ -4,7 +4,7 @@ import weaviate.classes as wvc
 
 from tqdm import tqdm
 from typing import List, Dict, Optional
-
+from weaviate.classes.query import Filter
 class WeaviateVectorDatabase:
     def __init__(self, host: str, port: int):
         """
@@ -16,10 +16,7 @@ class WeaviateVectorDatabase:
         """
         Create a collection (class) in Weaviate.
         """
-        existing_collections = self._get_collection_names()
-        existing_collection_names = [collection_name.lower() for collection_name in existing_collections.keys()]
-        if str.lower(collection_name) in existing_collection_names:
-            raise ValueError(f"Collection '{collection_name}' already exists. Please choose a different name.")
+        self._assert_collection_not_exists()
 
         if vectorizer == "text2vec-transformers":
             _ = self.client.collections.create(
@@ -65,11 +62,7 @@ class WeaviateVectorDatabase:
         """
         Search the collection using a query vector with optional filters.
         """
-        # TODO - should probs check the collection name aswell - make that a separate func as it seems to come in handy
-        existing_collections = self._get_collection_names()
-        existing_collection_names = [collection_name.lower() for collection_name in existing_collections.keys()]
-        if str.lower(collection_name) not in existing_collection_names:
-            raise ValueError(f"Collection '{collection_name}' does not exist!")
+        self._assert_collection_exists(collection_name)
 
         collection = self.client.collections.get(collection_name)
         if str.lower(search_type) == 'semantic':
@@ -80,26 +73,32 @@ class WeaviateVectorDatabase:
             NotImplementedError("Search type not implemented. Try: Semantic or BM25")
 
 
-    def delete_documents(self, collection_name: str, document_ids: List[str]):
+    def delete_documents(self, collection_name: str, weaviate_filter: Optional[Filter]=None, document_ids: Optional[List[str]]=None):
         """
         Delete documents by their IDs.
         """
-        pass
+        self._assert_collection_exists(collection_name)
+        collection = self.client.collections.get(collection_name)
+        if document_ids:
+            collection.data.delete_many(
+                where=Filter.by_id().contains_any(document_ids)
+            )
+        elif filter:
+            collection.data.delete_many(
+                where= weaviate_filter
+            )
+        else:
+            syslog.syslog("No filter nor id were provided! No deletion has been done.")
 
-    def get_collection_metadata(self, collection_name: str) -> Dict:
-        """
-        Get metadata of a specific collection.
-        """
-        pass
 
-    def clear_collection(self, collection_name: str):
-        """
-        Clear all documents in a collection.
-        """
-        pass
-
-    def batch_search(self, collection_name: str, query_vectors: List[List[float]], top_k: int = 5) -> List[List[Dict]]:
-        """
-        Perform batch searches for multiple query vectors.
-        """
-        pass
+    def _assert_collection_not_exists(self, collection_name: str):
+        existing_collections = self._get_collection_names()
+        existing_collection_names = [collection_name.lower() for collection_name in existing_collections.keys()]
+        if str.lower(collection_name) in existing_collection_names:
+            raise ValueError(f"Collection '{collection_name}' already exists. Please choose a different name.")
+        
+    def _assert_collection_exists(self, collection_name: str):
+        existing_collections = self._get_collection_names()
+        existing_collection_names = [collection_name.lower() for collection_name in existing_collections.keys()]
+        if str.lower(collection_name) not in existing_collection_names:
+            raise ValueError(f"Collection '{collection_name}' does not exist!")
