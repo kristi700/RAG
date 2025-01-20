@@ -14,3 +14,9 @@ The goal of this project is to build a system that combines:
 
 ## Vector database
    After running `docker compose up -d` (Docker Compose v2 or later), make sure all containers, including Weaviate and any vectorizer services, are connected to the same Docker network. Use the `docker network` commands to verify and configure network settings if necessary.
+
+## Graph database
+   First clone as described https://docs.nebula-graph.io/3.8.0/2.quick-start/1.quick-start-workflow/,  then use `docker compose -f docker-compose-lite.yaml up -d`. Afterwards, make sure to add all NebulaGraph related containers to the same `docker network` as weaviate.
+
+
+   
