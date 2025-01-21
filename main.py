@@ -1,9 +1,9 @@
 import argparse
 
-from utils import pdf_processor
+from utils.pdf_processor import parse_pdf
 from vector_db.vector_db import WeaviateVectorDatabase
 # NOTE - add LLM choice
-
+# NOTE - add context file type - pdf, txt...
 import weaviate.classes as wvc
 import requests
 import pandas as pd
@@ -16,11 +16,13 @@ def parse_args() -> argparse.Namespace:
         argparse.Namespace: The parsed arguments.
     """
     parser = argparse.ArgumentParser(description="Settings for RAG")
-    parser.add_argument("pdf file", help="PDF file to use as context for the LLM")
+    parser.add_argument("pdf_path", help="PDF file to use as context for the LLM")
     return parser.parse_known_args()
 
 def main():
     args, modifiers = parse_args()
+    pure_text = parse_pdf(args.pdf_path)
+
     vector_db = WeaviateVectorDatabase(host='host.docker.internal',port='8080')
     vector_db.delete_collection("test")
     ## testonly
