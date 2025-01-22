@@ -1,8 +1,11 @@
 import re
+import nltk
 import unicodedata
 from typing import List
 from pypdf import PdfReader
+from transformers import pipeline
 
+nltk.download("punkt_tab")
 
 def clean_text(text: str, is_lowercase: bool = True, is_punctation: bool = True) -> str:
     """
@@ -36,3 +39,33 @@ def parse_pdf(document_path: str, is_sentence_split: bool) ->List[str]:
         cleaned_pages.append(cleaned_text)
 
     return " ".join(cleaned_pages)
+
+
+def sentence_chunker(text, max_tokens: int):
+    sentences = nltk.tokenize.sent_tokenize(text, language='english')
+    chunks = []
+    current_chunk = []
+    current_tokens = 0
+    chunk_id = 1
+    
+    for sentence in sentences:
+        token_count = len(nltk.tokenize.word_tokenize(sentence))
+        if current_tokens + token_count > max_tokens:
+            chunk_text = " ".join(current_chunk)
+            chunks.append(chunk_text)
+            chunk_id += 1
+            current_chunk = [sentence]
+            current_tokens = token_count
+        else:
+            current_chunk.append(sentence)
+            current_tokens += token_count
+
+    if current_chunk:
+        chunk_text = " ".join(current_chunk)
+        chunks.append(chunk_text)
+    
+    return chunks
+
+def init_ner_pipiline(model: str = 'dslim/bert-base-NER'):
+    # TODO - do some checkings later
+    return pipeline("ner", model=model)
