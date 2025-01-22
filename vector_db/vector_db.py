@@ -16,7 +16,7 @@ class WeaviateVectorDatabase:
         """
         Create a collection (class) in Weaviate.
         """
-        self._assert_collection_not_exists()
+        self._assert_collection_not_exists(collection_name)
 
         if vectorizer == "text2vec-transformers":
             _ = self.client.collections.create(
