@@ -22,26 +22,18 @@ def parse_args() -> argparse.Namespace:
 def main():
     collection_name = 'context_data'
     args, modifiers = parse_args()
-    vector_db = WeaviateVectorDatabase(host='host.docker.internal',port='8080')
+    #vector_db = WeaviateVectorDatabase(host='host.docker.internal',port='8080')
     #graph_db = NebulaHandler(space_name=collection_name, host='host.docker.internal', port=9669)
-    ner_pipeline = preprocess.init_ner_pipiline()
-
+    triplex, triplex_token = preprocess.init_triplex()
     extracted_text = preprocess.parse_pdf(args.pdf_path, is_sentence_split=True)
     chunked_data = preprocess.sentence_chunker(extracted_text, max_tokens=64)
-
+    entity_types = [ "LOCATION", "POSITION", "DATE", "CITY", "COUNTRY", "NUMBER" ]
+    predicates = [ "POPULATION", "AREA" ]
     # would be nice to tqdm it somehow ngl
-    ner_output = ner_pipeline(chunked_data)
-    from transformers import pipeline
-    triplet_extractor = pipeline(
-    "text2text-generation",
-    model="SciPhi/Triplex",
-    tokenizer="SciPhi/Triplex"
-    )
-    output = triplet_extractor(
-    ner_output,
-    max_length=64,
-    do_sample=False
-    )
+    prediction = []
+    for chunk in chunked_data:
+        prediction.append(preprocess.triplextract(triplex, triplex_token, chunk, entity_types, predicates))
+
     vector_db.delete_collection(collection_name)
     ## testonly
     properties=[
