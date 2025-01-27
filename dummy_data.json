@@ -1,0 +1,145 @@
+[
+    {
+      "doc_id": 1,
+      "text": "Alice is the CEO of ACME Corp, a company based in New York City. She joined the company in 2020. ACME Corp was founded by Bob.",
+      "chunks": [
+        {
+          "chunk_id": 1,
+          "content": "Alice is the CEO of ACME Corp, a company based in New York City."
+        },
+        {
+          "chunk_id": 2,
+          "content": "She joined the company in 2020. ACME Corp was founded by Bob."
+        }
+      ],
+      "entities": [
+        {
+          "name": "Alice",
+          "type": "PERSON"
+        },
+        {
+          "name": "ACME Corp",
+          "type": "ORGANIZATION"
+        },
+        {
+          "name": "New York City",
+          "type": "LOCATION"
+        },
+        {
+          "name": "Bob",
+          "type": "PERSON"
+        },
+        {
+          "name": "2020",
+          "type": "DATE"
+        }
+      ],
+      "triplets": [
+        {
+          "subject": "Alice",
+          "predicate": "CEO_OF",
+          "object": "ACME Corp"
+        },
+        {
+          "subject": "ACME Corp",
+          "predicate": "BASED_IN",
+          "object": "New York City"
+        },
+        {
+          "subject": "ACME Corp",
+          "predicate": "FOUNDED_BY",
+          "object": "Bob"
+        },
+        {
+          "subject": "Alice",
+          "predicate": "JOINED_IN",
+          "object": "2020"
+        }
+      ]
+    },
+    {
+      "doc_id": 2,
+      "text": "Eve is a data scientist at XYZ Inc, which is headquartered in London. She worked at DataCorp from 2018 to 2021. In 2022, Eve relocated to Paris, France.",
+      "chunks": [
+        {
+          "chunk_id": 1,
+          "content": "Eve is a data scientist at XYZ Inc, which is headquartered in London."
+        },
+        {
+          "chunk_id": 2,
+          "content": "She worked at DataCorp from 2018 to 2021. In 2022, Eve relocated to Paris, France."
+        }
+      ],
+      "entities": [
+        {
+          "name": "Eve",
+          "type": "PERSON"
+        },
+        {
+          "name": "XYZ Inc",
+          "type": "ORGANIZATION"
+        },
+        {
+          "name": "London",
+          "type": "LOCATION"
+        },
+        {
+          "name": "DataCorp",
+          "type": "ORGANIZATION"
+        },
+        {
+          "name": "2018",
+          "type": "DATE"
+        },
+        {
+          "name": "2021",
+          "type": "DATE"
+        },
+        {
+          "name": "2022",
+          "type": "DATE"
+        },
+        {
+          "name": "Paris",
+          "type": "LOCATION"
+        },
+        {
+          "name": "France",
+          "type": "LOCATION"
+        }
+      ],
+      "triplets": [
+        {
+          "subject": "Eve",
+          "predicate": "WORKS_AT",
+          "object": "XYZ Inc"
+        },
+        {
+          "subject": "XYZ Inc",
+          "predicate": "HEADQUARTERED_IN",
+          "object": "London"
+        },
+        {
+          "subject": "Eve",
+          "predicate": "WORKED_AT",
+          "object": "DataCorp"
+        },
+        {
+          "subject": "DataCorp",
+          "predicate": "TIME_RANGE",
+          "object": "2018 - 2021"
+        },
+        {
+          "subject": "Eve",
+          "predicate": "RELOCATED_IN",
+          "object": "2022"
+        },
+        {
+          "subject": "Eve",
+          "predicate": "MOVED_TO",
+          "object": "Paris, France"
+        }
+      ]
+    }
+  ]
+  

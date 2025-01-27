@@ -50,9 +50,14 @@ def sentence_chunker(text, max_tokens: int):
     
     for sentence in sentences:
         token_count = len(nltk.tokenize.word_tokenize(sentence))
-        if current_tokens + token_count > max_tokens:
+        
+        if current_tokens + token_count > max_tokens and current_chunk:
             chunk_text = " ".join(current_chunk)
-            chunks.append(chunk_text)
+            chunks.append({
+                "chunk_id": chunk_id,
+                "content": chunk_text
+            })
+            
             chunk_id += 1
             current_chunk = [sentence]
             current_tokens = token_count
@@ -62,7 +67,10 @@ def sentence_chunker(text, max_tokens: int):
 
     if current_chunk:
         chunk_text = " ".join(current_chunk)
-        chunks.append(chunk_text)
+        chunks.append({
+            "chunk_id": chunk_id,
+            "content": chunk_text
+        })
     
     return chunks
 
@@ -87,7 +95,7 @@ def triplextract(model, tokenizer, text, entity_types, predicates):
 
     messages = [{'role': 'user', 'content': message}]
     input_ids = tokenizer.apply_chat_template(messages, add_generation_prompt = True, return_tensors="pt")
-    output = tokenizer.decode(model.generate(input_ids=input_ids, max_length=2048)[0], skip_special_tokens=True)
+    output = tokenizer.decode(model.generate(input_ids=input_ids, max_length=256)[0], skip_special_tokens=True)
     return output
 
 def init_triplex():

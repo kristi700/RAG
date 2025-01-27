@@ -29,7 +29,7 @@ class NebulaHandler:
 
     def recreate_space(self):
         """Drops and recreates the space with the default schema."""
-        query = f"""
+        query = f'''
             DROP SPACE IF EXISTS {self.space_name};
             CREATE SPACE {self.space_name}(partition_num=1, replica_factor=1, vid_type=INT64);
             USE {self.space_name};
@@ -37,7 +37,7 @@ class NebulaHandler:
             CREATE EDGE relationship(relationship string);
             CREATE TAG INDEX entity_name_index ON entity(name(20));
             CREATE EDGE INDEX relationship_index ON relationship(relationship(20));
-        """
+        '''
         self.session.execute(query)
 
     def execute_query(self, query):
@@ -53,10 +53,7 @@ class NebulaHandler:
 
     def get_max_entity_idx(self):
         """Fetches the maximum entity ID."""
-        query = f"""
-            USE {self.space_name};
-            MATCH (v:entity) RETURN id(v) AS id ORDER BY id DESC LIMIT 1;
-        """
+        query = f"""MATCH (v:entity) RETURN id(v) AS id ORDER BY id DESC LIMIT 1;"""
         result = self.execute_query(query)
         if result and result.rows():
             return int(result.rows()[0].values[0].get_iVal())
@@ -65,17 +62,17 @@ class NebulaHandler:
     def insert_entity(self, entity_name, entity_description, entity_idx=None):
         """Inserts or updates an entity."""
         entity_idx = entity_idx or self.get_max_entity_idx() + 1
-        query = f"""
-            INSERT VERTEX entity(name, description) VALUES {entity_idx}:("{entity_name}", "{entity_description}");
-        """
+
+        entity_name = entity_name.replace("'", "\\'")
+        entity_description = entity_description.replace("'", "\\'")
+
+        query = f"""INSERT VERTEX entity(name, description) VALUES {entity_idx}:('{entity_name}', '{entity_description}');"""
         self.execute_query(query)
         return entity_idx
 
     def insert_relationship(self, src_entity_idx, dst_entity_idx, relationship):
         """Creates a relationship (edge) between two entities."""
-        query = f"""
-            INSERT EDGE relationship(relationship) VALUES {src_entity_idx} -> {dst_entity_idx}:("{relationship}");
-        """
+        query = f"""INSERT EDGE relationship(relationship) VALUES {src_entity_idx} -> {dst_entity_idx}:('{relationship}');"""
         self.execute_query(query)
 
     def upsert_entity_relationship(self, src_name, src_description, dst_name, dst_description, relationship):
@@ -87,9 +84,7 @@ class NebulaHandler:
 
     def get_id_by_name(self, entity_name):
         """Retrieves the ID of an entity by its name."""
-        query = f"""
-            MATCH (v:entity) WHERE v.name == "{entity_name}" RETURN id(v) AS id;
-        """
+        query = f"""MATCH (v:entity) WHERE v.name == '{entity_name}' RETURN id(v) AS id;"""
         result = self.execute_query(query)
         if result and result.rows():
             return int(result.rows()[0].values[0].get_iVal())
@@ -97,9 +92,7 @@ class NebulaHandler:
 
     def get_full_graph(self):
         """Fetches all nodes and edges."""
-        query = """
-            MATCH p=(v:entity)-[r]->(v1:entity) RETURN p;
-        """
+        query = """MATCH p=(v:entity)-[r]->(v1:entity) RETURN p;"""
         result = self.execute_query(query)
         return result
    
