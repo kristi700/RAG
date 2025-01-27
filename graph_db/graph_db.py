@@ -44,8 +44,8 @@ class NebulaHandler:
         """Executes a NebulaGraph query and returns the result."""
         try:
             result = self.session.execute(query)
-            if result.error_code != 0:
-                raise Exception(f"Error executing query: {result.error_msg}")
+            if result.error_code() != 0:
+                raise Exception(f"Error executing query: {result.error_msg()}")
             return result
         except Exception as e:
             print(f"Exception occurred: {e}")
