@@ -6,7 +6,6 @@ from typing import List
 from pypdf import PdfReader
 from transformers import AutoModelForCausalLM, AutoTokenizer
 nltk.download("punkt_tab")
-
 def clean_text(text: str, is_lowercase: bool = True, is_punctation: bool = True) -> str:
     """
     Cleans a text string by:
@@ -73,6 +72,26 @@ def sentence_chunker(text, max_tokens: int):
         })
     
     return chunks
+
+def extract_entity_types(chunked_data, spacy_nlp):
+    """Extract unique entity types from the text using NER."""
+    entity_types = set()
+    for data in chunked_data:
+        doc = spacy_nlp(data['content'])
+        entity_types.update(ent.label_ for ent in doc.ents)
+    return list(entity_types)
+
+def extract_predicates(chunked_data, spacy_nlp):
+    """
+    Extract potential predicates (verbs) from the text using dependency parsing.
+    """
+    predicates = set()
+    for data in chunked_data:
+        doc = spacy_nlp(data['content'])
+        for token in doc:
+            if token.pos_ == "VERB" or token.dep_ == "ROOT":
+                predicates.add(token.text)
+    return list(predicates)
 
 def triplextract(model, tokenizer, text, entity_types, predicates):
 

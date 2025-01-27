@@ -1,3 +1,4 @@
+import spacy
 import argparse
 import utils.preprocess as preprocess
 
@@ -16,9 +17,10 @@ def parse_args() -> argparse.Namespace:
         argparse.Namespace: The parsed arguments.
     """
     parser = argparse.ArgumentParser(description="Settings for RAG")
+    parser.add_argument("question", help="User question to answer with context")
     parser.add_argument("pdf_path", help="PDF file to use as context for the LLM")
     return parser.parse_known_args()
-
+ 
 
 def insert_data_to_graphdb(graph_db, collection_name, all_docs):
     graph_db.switch_space(space_name=collection_name)
@@ -65,13 +67,16 @@ def insert_data_to_vectordb(vector_db, collection_name, all_docs):
 def main():
     collection_name = 'context_data'
     args, modifiers = parse_args()
+    spacy_nlp = spacy.load("en_core_web_sm")
     vector_db = WeaviateVectorDatabase(host='host.docker.internal',port='8080')
     graph_db = NebulaHandler(space_name=collection_name, host='host.docker.internal', port=9669)
     #triplex, triplex_token = preprocess.init_triplex()
     extracted_text = preprocess.parse_pdf(args.pdf_path, is_sentence_split=True)
     chunked_data = preprocess.sentence_chunker(extracted_text, max_tokens=64)
-    entity_types = [ "LOCATION", "POSITION", "DATE", "CITY", "COUNTRY", "NUMBER" ]
-    predicates = [ "POPULATION", "AREA" ]
+
+    # NOTE - entity seems okayish, but predicates are rlly off, and too much!
+    entity_types = preprocess.extract_entity_types(chunked_data, spacy_nlp)
+    predicates = preprocess.extract_predicates(chunked_data, spacy_nlp)
     # would be nice to tqdm it somehow ngl
 
     # TODO - make the data format as of the predictions
