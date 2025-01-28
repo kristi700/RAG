@@ -2,6 +2,7 @@ import spacy
 import argparse
 import utils.preprocess as preprocess
 
+from utils.llm_wrapper import LLM_wrapper
 from graph_db.graph_db import NebulaHandler
 from vector_db.vector_db import WeaviateVectorDatabase
 
@@ -70,16 +71,16 @@ def main():
     spacy_nlp = spacy.load("en_core_web_sm")
     vector_db = WeaviateVectorDatabase(host='host.docker.internal',port='8080')
     graph_db = NebulaHandler(space_name=collection_name, host='host.docker.internal', port=9669)
+    llm = LLM_wrapper(model_name="Qwen/Qwen2.5-0.5B-Instruct")
     #triplex, triplex_token = preprocess.init_triplex()
     extracted_text = preprocess.parse_pdf(args.pdf_path, is_sentence_split=True)
     chunked_data = preprocess.sentence_chunker(extracted_text, max_tokens=64)
 
-    # NOTE - entity seems okayish, but predicates are rlly off, and too much!
+    # TODO - should review and optimize this!
     entity_types = preprocess.extract_entity_types(chunked_data, spacy_nlp)
     predicates = preprocess.extract_predicates(chunked_data, spacy_nlp)
     # would be nice to tqdm it somehow ngl
 
-    # TODO - make the data format as of the predictions
     import json
     with open("dummy_data.json") as json_file:
         combined_data = json.load(json_file)
@@ -114,8 +115,7 @@ def main():
     insert_data_to_vectordb(vector_db, collection_name, combined_data)
     insert_data_to_graphdb(graph_db, collection_name, combined_data)
 
-    response = vector_db.search(collection_name=collection_name, query_vector="animal", search_type='bm25')
-    print(response)
+    print(llm.generate(system_prompt='You are a large language model. You are a helpful assistant',user_prompt=args.question))
 
 if __name__ == "__main__":
     main()
