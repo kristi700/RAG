@@ -2,6 +2,7 @@ import spacy
 import argparse
 import utils.preprocess as preprocess
 
+from typing import Optional
 from utils.llm_wrapper import LLM_wrapper
 from graph_db.graph_db import NebulaHandler
 from vector_db.vector_db import WeaviateVectorDatabase
@@ -63,6 +64,14 @@ def insert_data_to_vectordb(vector_db, collection_name, all_docs):
     vector_db.add_documents(collection_name, documents_to_insert)
 
 
+## NOTE - not sure of this docid thingy liek this nglxd
+def get_context(graph_db, vector_db, user_prompt: str, doc_id: Optional[int] = None):
+    # TODO -review the grpah db!
+    weaviate_response = vector_db.search('context_data', user_prompt, top_k=2) # dont hardcode!
+    vector_context = [item.properties['content'] for item in weaviate_response.objects if item.properties['doc_id'] == doc_id]
+    #graph_results = graph_db.
+    return vector_context
+
 # TODO - make all upload func batch upload compatible - for multiple pdfs!
 # TODO - make the format of the data the same as in the dummy_data.json (combine chunked + raw + triplets)
 def main():
@@ -88,6 +97,8 @@ def main():
     prediction = []
     for chunk in chunked_data:
         prediction.append(preprocess.triplextract(triplex, triplex_token, chunk, entity_types, predicates))
+
+    combined_data = TODO
     """
     vector_db.delete_collection(collection_name)
     ## testonly
@@ -115,7 +126,8 @@ def main():
     insert_data_to_vectordb(vector_db, collection_name, combined_data)
     insert_data_to_graphdb(graph_db, collection_name, combined_data)
 
-    print(llm.generate(system_prompt='You are a large language model. You are a helpful assistant',user_prompt=args.question))
-
+    context = get_context(graph_db, vector_db, args.question, doc_id=1)
+    print(llm.generate(user_prompt=args.question, context=context))
+    vector_db.client.close()
 if __name__ == "__main__":
     main()

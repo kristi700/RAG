@@ -8,7 +8,16 @@ class LLM_wrapper():
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=PRIVATE_TOKEN)
         self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype="auto", token=PRIVATE_TOKEN)
 
-    def generate(self, system_prompt: str, user_prompt: str):
+    def generate(self, user_prompt: str, context):
+        system_prompt = f"""You are a helpful assistant. You answer the user's question based on the context provided here.
+        Do not make up data, ground your answers in the context.
+        The context contains a set of document chunks, knowledge graph nodes and knowledge graph connections. Use these to answer the question.
+        Do not mention this knowledge graph directly, use fluent natural language instead.
+        Use English regardless of the input data.
+
+        ### Context ###
+        {context}"""
+
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
