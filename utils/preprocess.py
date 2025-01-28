@@ -4,8 +4,12 @@ import nltk
 import unicodedata
 from typing import List
 from pypdf import PdfReader
+from collections import Counter
 from transformers import AutoModelForCausalLM, AutoTokenizer
 nltk.download("punkt_tab")
+
+COMMON_VERBS = {"is", "has", "does", "do", "are", "was", "were", "had", "be", "been", "being", "get"}
+
 def clean_text(text: str, is_lowercase: bool = True, is_punctation: bool = True) -> str:
     """
     Cleans a text string by:
@@ -81,17 +85,22 @@ def extract_entity_types(chunked_data, spacy_nlp):
         entity_types.update(ent.label_ for ent in doc.ents)
     return list(entity_types)
 
-def extract_predicates(chunked_data, spacy_nlp):
+def extract_predicates(chunked_data, spacy_nlp, top_k=20):
     """
     Extract potential predicates (verbs) from the text using dependency parsing.
     """
     predicates = set()
+    predicate_counter = Counter()
+    
     for data in chunked_data:
         doc = spacy_nlp(data['content'])
         for token in doc:
-            if token.pos_ == "VERB" or token.dep_ == "ROOT":
-                predicates.add(token.text)
-    return list(predicates)
+            if (token.pos_ == "VERB" and \
+            any(child.dep_ == "nsubj" for child in token.children) and \
+            any(child.dep_ in {"dobj", "pobj"} for child in token.children)) and \
+            token.text.lower() not in COMMON_VERBS:
+                predicate_counter[token.text] += 1
+    return [predicate for predicate, _ in predicate_counter.most_common(top_k)]
 
 def triplextract(model, tokenizer, text, entity_types, predicates):
 
