@@ -41,7 +41,7 @@ class NebulaHandler:
             CREATE EDGE INDEX relationship_index ON relationship(relationship(20));
         '''
         self.session.execute(query)
-        time.sleep(5) # NOTE - needed to mitigate problems relating from docker network delays
+        time.sleep(20) # NOTE - needed to mitigate problems relating from docker network delays
 
     def execute_query(self, query):
         """Executes a NebulaGraph query and returns the result."""

@@ -7,8 +7,15 @@ from utils.llm_wrapper import LLM_wrapper
 from graph_db.graph_db import NebulaHandler
 from vector_db.vector_db import WeaviateVectorDatabase
 
+from typing import List, Optional, Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
+
 # NOTE - add LLM choice
 # NOTE - add context file type - pdf, txt...
+# TODO - add graph triplet optimization!
+
 import weaviate.classes as wvc
 
 def parse_args() -> argparse.Namespace:
@@ -28,19 +35,17 @@ def insert_data_to_graphdb(graph_db, collection_name, all_docs):
     graph_db.switch_space(space_name=collection_name)
     for doc in all_docs:
         doc_triplets = doc["triplets"]
-        doc_entities = doc.get("entities", [])
-
-        entity_map = {}
-        for ent in doc_entities:
-            entity_map[ent["name"]] = f"Type: {ent['type']}"
 
         for trip in doc_triplets:
-            subject_name = trip["subject"]
+            subject = trip["subject"]
             predicate = trip["predicate"]
-            object_name = trip["object"]
+            obj = trip["object"]
 
-            subject_desc = entity_map.get(subject_name, "")
-            object_desc = entity_map.get(object_name, "")
+            subject_name = subject["name"]
+            subject_desc = subject.get("description", "")
+            
+            object_name = obj["name"]
+            object_desc = obj.get("description", "")
 
             graph_db.upsert_entity_relationship(
                 src_name=subject_name,
@@ -51,7 +56,7 @@ def insert_data_to_graphdb(graph_db, collection_name, all_docs):
             )
 
 def insert_data_to_vectordb(vector_db, collection_name, all_docs):
-    documents_to_insert =[]
+    documents_to_insert = []
     for doc in all_docs:
         doc_id = doc["doc_id"]
         for chunk in doc["chunks"]:
@@ -61,16 +66,120 @@ def insert_data_to_vectordb(vector_db, collection_name, all_docs):
                 "content": chunk["content"]
             })
 
+        for trip in doc["triplets"]:
+            subject = trip["subject"]
+            obj = trip["object"]
+
+            documents_to_insert.append({
+                "doc_id": doc_id,
+                "chunk_id": f"triplet-{trip['predicate']}",
+                "content": f"{subject['name']} ({subject.get('description', '')}) {trip['predicate']} {obj['name']} ({obj.get('description', '')})"
+            })
+
     vector_db.add_documents(collection_name, documents_to_insert)
 
 
 ## NOTE - not sure of this docid thingy liek this nglxd
-def get_context(graph_db, vector_db, user_prompt: str, doc_id: Optional[int] = None):
-    # TODO -review the grpah db!
-    weaviate_response = vector_db.search('context_data', user_prompt, top_k=2) # dont hardcode!
-    vector_context = [item.properties['content'] for item in weaviate_response.objects if item.properties['doc_id'] == doc_id]
-    #graph_results = graph_db.
-    return vector_context
+
+def get_context(graph_db: NebulaHandler, vector_db, user_prompt: str,doc_id: Optional[int] = None, vector_top_k: int = 3,graph_depth: int = 2)-> Dict[str, List]:
+    context = {"vector_context": [], "graph_context": []}
+    vector_response = vector_db.search(
+        collection_name='context_data',
+        query=user_prompt,
+        top_k=vector_top_k
+    )
+
+    if doc_id is not None:
+        vector_context = [
+            item.properties['content'] for item in vector_response.objects
+            if item.properties.get('doc_id') == doc_id
+        ]
+    else:
+        vector_context = [item.properties['content'] for item in vector_response.objects]
+    
+    context["vector_context"] = vector_context
+    graph_entities = _find_related_entities(graph_db, user_prompt)
+
+    if graph_entities:
+        context["graph_context"] = _get_entity_relations(
+            graph_db,
+            graph_entities,
+            max_depth=graph_depth
+        )
+    
+    return context
+
+def _find_related_entities(graph_db: NebulaHandler, query: str, max_entities: int = 5) -> List[Dict]:
+    result = graph_db.execute_query(
+        "LOOKUP ON entity YIELD id(vertex) AS vid, properties(vertex).name AS name, "
+        "properties(vertex).description AS description"
+    )
+
+    if not result or not result.rows():
+        return []
+
+    entities = []
+    for row in result.rows():
+        entities.append({
+            "id": row.values[0].get_iVal(),
+            "name": row.values[1].get_sVal(),
+            "description": row.values[2].get_sVal()
+        })
+
+    query_keywords = set(query.lower().split())
+    relevant_entities = []
+    
+
+    # NOTE - do we only get entity name?
+    for entity in entities:
+        desc = entity.get('description', '').lower().decode()
+        score = len(query_keywords.intersection(set(desc.split())))
+        if score > 0:
+            relevant_entities.append({
+                'id': entity['id'],
+                'name': entity['name'],
+                'score': score
+            })
+
+    return sorted(relevant_entities, key=lambda x: x['score'], reverse=True)[:max_entities]
+
+
+def _get_entity_relations(graph_db: NebulaHandler, entities: List[Dict], max_depth: int = 2) -> List[Dict]:
+    relations = []
+    
+    for entity in entities:
+        # NOTE - do we need directed rel here?
+        query = (
+            f"MATCH p=(e)-[r*1..{max_depth}]-(neighbor) "
+            f"WHERE id(e) == {entity['id']} "
+            "RETURN p;"
+        )
+        
+        result = graph_db.execute_query(query)
+        if not result or not result.rows():
+            continue
+
+        for row in result.rows():
+            path = row.values[0].value
+            src_vertex = path.src
+            source = src_vertex.tags[0].props[b'name'].value.decode()
+            source_description = src_vertex.tags[0].props.get(b'description', b'').value.decode()
+
+            for step in path.steps:
+                dst_vertex = step.dst
+                target = dst_vertex.tags[0].props[b'name'].value.decode()
+                target_description = dst_vertex.tags[0].props.get(b'description', b'').value.decode()
+                relationship = step.props[b'relationship'].value.decode()
+
+                relations.append({
+                    'source': source,
+                    'source_description': source_description,
+                    'relationship': relationship,
+                    'target': target,
+                    'target_description': target_description,
+                })
+    
+    return relations
 
 # TODO - make all upload func batch upload compatible - for multiple pdfs!
 # TODO - make the format of the data the same as in the dummy_data.json (combine chunked + raw + triplets)
@@ -126,7 +235,7 @@ def main():
     insert_data_to_vectordb(vector_db, collection_name, combined_data)
     insert_data_to_graphdb(graph_db, collection_name, combined_data)
 
-    context = get_context(graph_db, vector_db, args.question, doc_id=1)
+    context = get_context(graph_db, vector_db, args.question)
     print(llm.generate(user_prompt=args.question, context=context))
     vector_db.client.close()
 if __name__ == "__main__":
