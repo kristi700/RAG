@@ -58,7 +58,7 @@ class WeaviateVectorDatabase:
         if len(collection.batch.failed_objects) > 0:
             syslog.syslog(f"Failed to import {len(collection.batch.failed_objects)} objects")
 
-    def search(self, collection_name: str, query_vector: List[float], top_k: int = 5, search_type:str='semantic', filters: Optional[Dict] = None) -> List[Dict]:
+    def search(self, collection_name: str, query: List[float], top_k: int = 5, search_type:str='semantic', filters: Optional[Dict] = None) -> List[Dict]:
         """
         Search the collection using a query vector with optional filters.
         """
@@ -66,9 +66,9 @@ class WeaviateVectorDatabase:
 
         collection = self.client.collections.get(collection_name)
         if str.lower(search_type) == 'semantic':
-            return collection.query.near_text(query=query_vector, limit=top_k, filters=filters)
+            return collection.query.near_text(query=query, limit=top_k, filters=filters)
         elif str.lower(search_type) == 'bm25':
-            return collection.query.bm25(query=query_vector, limit=top_k, filters=filters)
+            return collection.query.bm25(query=query, limit=top_k, filters=filters)
         else:
             NotImplementedError("Search type not implemented. Try: Semantic or BM25")
 
