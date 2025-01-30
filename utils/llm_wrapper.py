@@ -1,7 +1,5 @@
 import torch
-import outlines
 
-from outlines import generate
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 PRIVATE_TOKEN = ''
@@ -18,12 +16,12 @@ DEFAULT_TRIPLET_EXTRACTION_PROMPT = """Given a text chunk from a document extrac
     Stopwords should be avoided. Provide the triples as a JSON object along with a short description of the subject and object entities. Descriptions could be longer than the example provided.
     Use English regardless of the input data. Make sure not to extract more than 5 triplets!
 
-    You must output a strictly valid JSON object. Any output that is not valid JSON will be rejected.
     Ensure that:
     - No extra commas appear before closing brackets (`]` or `}`).
     - Every `{` has a matching `}`.
     - Strings are wrapped in double quotes (`"`), not single quotes (`'`).
-    - Follow this exact JSON format:
+
+    You must output a strictly valid JSON object. Any output that is not valid JSON will be rejected!
 
     Example:
     Text: Philz is a coffee shop founded in 1982 in Berkeley. The café specializes in handcrafted coffee.
@@ -53,34 +51,6 @@ DEFAULT_TRIPLET_EXTRACTION_PROMPT = """Given a text chunk from a document extrac
         }
     ]
 }
-"""
-
-OUTLINES_SCHEMA = """
-{
-    "triplets": [
-        {
-            "subject": {"name": "Philz", "description": "The name of a coffee shop"},
-            "predicate": "type of business",
-            "object": {"name": "coffee shop", "description": "A place specializing in serving coffee"}
-        },
-        {
-            "subject": {"name": "Philz", "description": "The name of a coffee shop"},
-            "predicate": "located in",
-            "object": {"name": "Berkeley", "description": "A city in California"}
-        },
-        {
-            "subject": {"name": "Philz", "description": "The name of a coffee shop"},
-            "predicate": "founded in",
-            "object": {"name": "1982", "description": "A year, date"}
-        },
-        {
-            "subject": {"name": "Philz", "description": "The name of a coffee shop"},
-            "predicate": "specializes in",
-            "object": {"name": "handcrafted coffee", "description": "Coffee made by hand, generally of high quality"}
-        }
-    ]
-}
-
 """
 
 class LLM_wrapper():

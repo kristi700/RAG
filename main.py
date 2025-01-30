@@ -38,17 +38,37 @@ def main():
     #triplex, triplex_token = preprocess.init_triplex()
     extracted_text = preprocess.parse_pdf(args.pdf_path, is_sentence_split=True)
     chunked_data = preprocess.sentence_chunker(extracted_text, max_tokens=64)
+    # would be nice to tqdm this ngl
+    #triplets = preprocess.extract_triplets(llm, chunked_data)
 
-    # TODO - should review and optimize this!
-    triplets = preprocess.extract_triplets(llm, chunked_data)
-    # would be nice to tqdm it somehow ngl
     vector_db.delete_collection(collection_name)
-    with open("dummy_data.json") as json_file:
-        combined_data = json.load(json_file)
+    # NOTE -0.5b qwen, first runs data, for testing only!
+    with open("combined_triplets.json") as json_file:
+        triplets = json.load(json_file)
 
     """
+    # NOTE - multi doc based thingy wont work as of rightnow!!
+
+    # as entities are not needed, all we need to do is
+    #   - 
+    #   - combine that with chunked data into one list
+
+    all_triplets = {'triplets': []}
+
+    for triplet in triplets:
+        all_triplets['triplets'] += json.loads(triplet)['triplets']
     combined_data = TODO
     """
+
+    #tmptmptmp
+    combined_chunks = {'chunks': []}
+    for i in range(len(chunked_data)):
+        combined_chunks['chunks'].append(chunked_data[i])
+
+    triplets = triplets # refine triplets (and making sure all is in the same dict)
+
+    # Only one doc for now
+    combined_data = [{"doc_id": 1, "text": extracted_text, 'chunks': combined_chunks['chunks'], 'triplets': triplets['triplets']}]
 
     properties = [
         wvc.config.Property(name="doc_id", data_type=wvc.config.DataType.INT),

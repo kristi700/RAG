@@ -1,10 +1,11 @@
 import re
-import json
 import nltk
 import logging
 import unicodedata
+
 from typing import List
 from pypdf import PdfReader
+from json_repair import repair_json
 from utils.llm_wrapper import LLM_wrapper
 nltk.download("punkt_tab")
 
@@ -75,15 +76,7 @@ def sentence_chunker(text, max_tokens: int):
     
     return chunks
 
-def _validate_json(json_text: str):
-    try:
-        parsed_json = json.loads(json_text)
-        return parsed_json
-    except json.JSONDecodeError as e:
-        logging.error(f"JSON parsing error: {e}\nInvalid JSON: {json_text}")
-        return None 
-
-#  https://github.com/dottxt-ai/outlines#efficient-json-generation-following-a-pydantic-model
+#  https://github.com/mangiucugna/json_repair  - Maybe, maybe
 # NOTE - we dont need to make the clean and validate now imo!
 def extract_triplets(llm: LLM_wrapper, chunked_data):
     # TODO - try outlines!
@@ -93,7 +86,7 @@ def extract_triplets(llm: LLM_wrapper, chunked_data):
     for chunk in chunked_data:
         try:
             raw_triplet_text = llm.generate_extract(chunk["content"])
-            parsed_triplets = _validate_json(raw_triplet_text)
+            parsed_triplets = repair_json(raw_triplet_text)
             if parsed_triplets and "triplets" in parsed_triplets:
                 combined_triplets.append(parsed_triplets)
             else:

@@ -1,26 +1,31 @@
+import logging
+
 def insert_data_to_graphdb(graph_db, collection_name, all_docs):
     graph_db.switch_space(space_name=collection_name)
     for doc in all_docs:
         doc_triplets = doc["triplets"]
 
         for trip in doc_triplets:
-            subject = trip["subject"]
-            predicate = trip["predicate"]
-            obj = trip["object"]
+            try:
+                subject = trip["subject"]
+                predicate = trip["predicate"]
+                obj = trip["object"]
 
-            subject_name = subject["name"]
-            subject_desc = subject.get("description", "")
-            
-            object_name = obj["name"]
-            object_desc = obj.get("description", "")
+                subject_name = subject["name"]
+                subject_desc = subject.get("description", "")
+                
+                object_name = obj["name"]
+                object_desc = obj.get("description", "")
 
-            graph_db.upsert_entity_relationship(
-                src_name=subject_name,
-                src_description=subject_desc,
-                dst_name=object_name,
-                dst_description=object_desc,
-                relationship=predicate
-            )
+                graph_db.upsert_entity_relationship(
+                    src_name=subject_name,
+                    src_description=subject_desc,
+                    dst_name=object_name,
+                    dst_description=object_desc,
+                    relationship=predicate
+                )
+            except Exception as e:
+                logging.error(f"Malformed triplet, skipping - {trip}")
 
 def insert_data_to_vectordb(vector_db, collection_name, all_docs):
     documents_to_insert = []
