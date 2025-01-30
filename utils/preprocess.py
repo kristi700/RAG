@@ -1,14 +1,12 @@
 import re
 import json
 import nltk
+import logging
 import unicodedata
 from typing import List
 from pypdf import PdfReader
-from collections import Counter
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from utils.llm_wrapper import LLM_wrapper
 nltk.download("punkt_tab")
-
-COMMON_VERBS = {"is", "has", "does", "do", "are", "was", "were", "had", "be", "been", "being", "get"}
 
 def clean_text(text: str, is_lowercase: bool = True, is_punctation: bool = True) -> str:
     """
@@ -77,56 +75,33 @@ def sentence_chunker(text, max_tokens: int):
     
     return chunks
 
-def extract_entity_types(chunked_data, spacy_nlp):
-    """Extract unique entity types from the text using NER."""
-    entity_types = set()
-    for data in chunked_data:
-        doc = spacy_nlp(data['content'])
-        entity_types.update(ent.label_ for ent in doc.ents)
-    return list(entity_types)
+def _validate_json(json_text: str):
+    try:
+        parsed_json = json.loads(json_text)
+        return parsed_json
+    except json.JSONDecodeError as e:
+        logging.error(f"JSON parsing error: {e}\nInvalid JSON: {json_text}")
+        return None 
 
-def extract_predicates(chunked_data, spacy_nlp, top_k=20):
-    """
-    Extract potential predicates (verbs) from the text using dependency parsing.
-    """
-    predicates = set()
-    predicate_counter = Counter()
+#  https://github.com/dottxt-ai/outlines#efficient-json-generation-following-a-pydantic-model
+# NOTE - we dont need to make the clean and validate now imo!
+def extract_triplets(llm: LLM_wrapper, chunked_data):
+    # TODO - try outlines!
+    combined_triplets = []
+    failed_chunks = []
     
-    for data in chunked_data:
-        doc = spacy_nlp(data['content'])
-        for token in doc:
-            if (token.pos_ == "VERB" and \
-            any(child.dep_ == "nsubj" for child in token.children) and \
-            any(child.dep_ in {"dobj", "pobj"} for child in token.children)) and \
-            token.text.lower() not in COMMON_VERBS:
-                predicate_counter[token.text] += 1
-    return [predicate for predicate, _ in predicate_counter.most_common(top_k)]
+    for chunk in chunked_data:
+        try:
+            raw_triplet_text = llm.generate_extract(chunk["content"])
+            parsed_triplets = _validate_json(raw_triplet_text)
+            if parsed_triplets and "triplets" in parsed_triplets:
+                combined_triplets.append(parsed_triplets)
+            else:
+                logging.warning(f"Skipping chunk due to missing 'triplets': {raw_triplet_text}")
+                failed_chunks.append(chunk["content"])
 
-def triplextract(model, tokenizer, text, entity_types, predicates):
+        except Exception as e:
+            logging.error(f"Error processing chunk: {chunk['content'][:50]}... - {e}")
+            failed_chunks.append(chunk["content"])
 
-    input_format = """Perform Named Entity Recognition (NER) and extract knowledge graph triplets from the text. NER identifies named entities of given entity types, and triple extraction identifies relationships between entities using specified predicates.
-      
-        **Entity Types:**
-        {entity_types}
-        
-        **Predicates:**
-        {predicates}
-        
-        **Text:**
-        {text}
-        """
-
-    message = input_format.format(
-                entity_types = json.dumps({"entity_types": entity_types}),
-                predicates = json.dumps({"predicates": predicates}),
-                text = text)
-
-    messages = [{'role': 'user', 'content': message}]
-    input_ids = tokenizer.apply_chat_template(messages, add_generation_prompt = True, return_tensors="pt")
-    output = tokenizer.decode(model.generate(input_ids=input_ids, max_length=256)[0], skip_special_tokens=True)
-    return output
-
-def init_triplex():
-    model = AutoModelForCausalLM.from_pretrained("sciphi/triplex", trust_remote_code=True).eval()
-    tokenizer = AutoTokenizer.from_pretrained("sciphi/triplex", trust_remote_code=True)
-    return model, tokenizer
+    return combined_triplets, failed_chunks

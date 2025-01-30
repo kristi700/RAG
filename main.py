@@ -1,6 +1,4 @@
-
 import json
-import spacy
 import argparse
 import weaviate.classes as wvc
 
@@ -13,9 +11,6 @@ from rag.data_ingestion import insert_data_to_graphdb, insert_data_to_vectordb
 
 # NOTE - add LLM choice
 # NOTE - add context file type - pdf, txt...
-# TODO - add graph triplet optimization!
-
-import weaviate.classes as wvc
 
 def parse_args() -> argparse.Namespace:
     """
@@ -36,7 +31,6 @@ def main():
     args, _ = parse_args()
     collection_name = 'context_data'
 
-    spacy_nlp = spacy.load("en_core_web_sm")
     vector_db = WeaviateVectorDatabase(host='host.docker.internal',port='8080')
     graph_db = NebulaHandler(space_name=collection_name, host='host.docker.internal', port=9669)
     llm = LLM_wrapper(model_name="Qwen/Qwen2.5-0.5B-Instruct")
@@ -46,20 +40,16 @@ def main():
     chunked_data = preprocess.sentence_chunker(extracted_text, max_tokens=64)
 
     # TODO - should review and optimize this!
-    entity_types = preprocess.extract_entity_types(chunked_data, spacy_nlp)
-    predicates = preprocess.extract_predicates(chunked_data, spacy_nlp)
+    triplets = preprocess.extract_triplets(llm, chunked_data)
     # would be nice to tqdm it somehow ngl
-
+    vector_db.delete_collection(collection_name)
     with open("dummy_data.json") as json_file:
         combined_data = json.load(json_file)
-    """
-    prediction = []
-    for chunk in chunked_data:
-        prediction.append(preprocess.triplextract(triplex, triplex_token, chunk, entity_types, predicates))
 
+    """
     combined_data = TODO
     """
-    ## testonly
+
     properties = [
         wvc.config.Property(name="doc_id", data_type=wvc.config.DataType.INT),
         wvc.config.Property(name="chunk_id", data_type=wvc.config.DataType.INT),
@@ -73,7 +63,7 @@ def main():
 
     context = get_context(graph_db, vector_db, args.question)
     
-    print(llm.generate(user_prompt=args.question, context=context))
+    print(llm.generate_chat(user_prompt=args.question, context=context))
 
     # Cleanup
     vector_db.delete_collection(collection_name)
