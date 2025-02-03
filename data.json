@@ -1,0 +1,586 @@
+[
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "OOMs",
+          "description": "Counts of issues identified"
+        },
+        "predicate": "scale-up rate",
+        "object": {
+          "value": "effective computation"
+        },
+        "chunk_id": 0
+      },
+      {
+        "subject": {
+          "name": "OOMs",
+          "description": "Counts of issues identified"
+        },
+        "predicate": "scale-up factor",
+        "object": {
+          "value": "effective computation"
+        },
+        "chunk_id": 0
+      },
+      {
+        "subject": {
+          "name": "OOMs",
+          "description": "Counts of issues identified"
+        },
+        "predicate": "scale-up percentage",
+        "object": {
+          "value": "effective computation"
+        },
+        "chunk_id": 0
+      },
+      {
+        "subject": {
+          "name": "OOMs",
+          "description": "Counts of issues identified"
+        },
+        "predicate": "scale-up multiplier",
+        "object": {
+          "value": "effective computation"
+        },
+        "chunk_id": 0
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "year": "2023",
+          "description": "An unspecified year beyond 2023"
+        },
+        "predicate": "date of occurrence",
+        "object": {
+          "year": "2027",
+          "description": "Another unspecified year beyond 2027"
+        },
+        "chunk_id": 1
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "GPT-2",
+          "description": "One of the leading AI models"
+        },
+        "predicate": "number_of_training_epochs\": \"many",
+        "object": {
+          "name": "GPT-4",
+          "description": "Another large model"
+        },
+        "chunk_id": 2
+      },
+      {
+        "subject": {
+          "name": "GPT-3",
+          "description": "Another large model"
+        },
+        "predicate": "year_of_release\": \"2020",
+        "object": {
+          "name": "GPT-4",
+          "description": "released in 2027"
+        },
+        "chunk_id": 2
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "Moores Law",
+          "description": "An aging computer science theory"
+        },
+        "predicate": "is widely assumed to apply",
+        "object": {
+          "name": "Moores Law",
+          "description": "A fundamental concept in computing"
+        },
+        "chunk_id": 3
+      },
+      {
+        "subject": {
+          "name": "Computers",
+          "description": "A type of electronic device used for processing information"
+        },
+        "predicate": "scaleup",
+        "object": {
+          "name": "computec",
+          "description": "A term referring to significant increases in technology"
+        },
+        "chunk_id": 3
+      },
+      {
+        "subject": {
+          "name": "OOMs",
+          "description": "A measure of performance degradation in software"
+        },
+        "predicate": "in recent decades",
+        "object": {
+          "name": "OOMs per decade",
+          "description": "Performance degradation measured over time"
+        },
+        "chunk_id": 3
+      },
+      {
+        "subject": {
+          "name": "Moores Law",
+          "description": "A key factor influencing scaling speeds"
+        },
+        "predicate": "has been relatively slow compared to previous times",
+        "object": {
+          "name": "Moores Law",
+          "description": "A foundational principle of computer science"
+        },
+        "chunk_id": 3
+      },
+      {
+        "subject": {
+          "name": "Investment",
+          "description": "Money spent on developing new technologies"
+        },
+        "predicate": "in recent years",
+        "object": {
+          "name": "mammoth",
+          "description": "Very large amount of money"
+        },
+        "chunk_id": 3
+      },
+      {
+        "subject": {
+          "name": "Scaleups",
+          "description": "A term describing significant increases in technological progress"
+        },
+        "predicate": "occur",
+        "object": {
+          "name": "computec",
+          "description": "Technology related to computers"
+        },
+        "chunk_id": 3
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "Spending",
+          "description": "An action taken for money"
+        },
+        "predicate": "cost",
+        "object": {
+          "amount": "even a million dollars",
+          "description": "Amount spent on something"
+        },
+        "chunk_id": 4
+      },
+      {
+        "subject": {
+          "name": "a model",
+          "description": "Something used for a purpose"
+        },
+        "predicate": "used for",
+        "object": {
+          "model": "a single model",
+          "description": "One of many models"
+        },
+        "chunk_id": 4
+      },
+      {
+        "subject": {
+          "name": "a single model",
+          "description": "A specific instance of something"
+        },
+        "predicate": "was",
+        "object": {
+          "name": "overtly outrageous",
+          "description": "Very unusual"
+        },
+        "chunk_id": 4
+      },
+      {
+        "subject": {
+          "name": "a model",
+          "description": "Something used for a purpose"
+        },
+        "predicate": "now",
+        "object": {
+          "state": "pocket change",
+          "description": "A state of having no money left"
+        },
+        "chunk_id": 4
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "model_name": "GPT-2",
+          "description": "The name of the model used in the estimate"
+        },
+        "predicate": "architecture",
+        "object": {
+          "model_version": "2019",
+          "description": "Version of the model"
+        },
+        "chunk_id": 5
+      },
+      {
+        "subject": {
+          "model_name": "GPT-3",
+          "description": "The name of the model used in the estimate"
+        },
+        "predicate": "architecture",
+        "object": {
+          "model_version": "2020",
+          "description": "Version of the model"
+        },
+        "chunk_id": 5
+      },
+      {
+        "subject": {
+          "model_name": "GPT-4",
+          "description": "The name of the model used in the estimate"
+        },
+        "predicate": "architecture",
+        "object": {
+          "model_version": "2023",
+          "description": "Version of the model"
+        },
+        "chunk_id": 5
+      },
+      {
+        "subject": {
+          "model_name": "Table 1",
+          "description": "Title of the table"
+        },
+        "predicate": "version of the paper",
+        "object": {
+          "year": "2019",
+          "description": "Year of the paper"
+        },
+        "chunk_id": 5
+      },
+      {
+        "subject": {
+          "model_name": "Table 1",
+          "description": "Title of the table"
+        },
+        "predicate": "version of the paper",
+        "object": {
+          "year": "2023",
+          "description": "Year of the paper"
+        },
+        "chunk_id": 5
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "Epoch AI",
+          "description": "An organization widely respected for its analysis of AI trends"
+        },
+        "predicate": "source of information",
+        "object": {
+          "name": "GPT-2",
+          "description": "The first generation of language models created by Google\"s artificial intelligence team\""
+        },
+        "description": "This organization provides estimates on the scalability of AI systems",
+        "chunk_id": 6
+      },
+      {
+        "subject": {
+          "name": "Epoch AI",
+          "description": "An organization widely respected for its analysis of AI trends"
+        },
+        "predicate": "source of information",
+        "object": {
+          "name": "GPT-3",
+          "description": "The second generation of language models created by Google\"s artificial intelligence team\""
+        },
+        "description": "This organization provides estimates on the scalability of AI systems",
+        "chunk_id": 6
+      },
+      {
+        "subject": {
+          "name": "Epoch AI",
+          "description": "An organization widely respected for its analysis of AI trends"
+        },
+        "predicate": "source of information",
+        "object": {
+          "name": "GPT-2",
+          "description": "The first generation of language models created by Google\"s artificial intelligence team\""
+        },
+        "description": "This organization provides estimates on the scalability of AI systems",
+        "chunk_id": 6
+      },
+      {
+        "subject": {
+          "name": "Epoch AI",
+          "description": "An organization widely respected for its analysis of AI trends"
+        },
+        "predicate": "source of information",
+        "object": {
+          "name": "GPT-3",
+          "description": "The second generation of language models created by Google\"s artificial intelligence team\""
+        },
+        "description": "This organization provides estimates on the scalability of AI systems",
+        "chunk_id": 6
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "model": "GPT-4",
+          "description": "The name of the latest model"
+        },
+        "predicate": "training",
+        "object": {
+          "model": "GPT-2",
+          "description": "The previous model being scaled up"
+        },
+        "chunk_id": 7
+      },
+      {
+        "subject": {
+          "model": "GPT-4",
+          "description": "The name of the latest model"
+        },
+        "predicate": "situational awareness",
+        "object": {
+          "model": "Epoch AI",
+          "description": "An estimated estimate based on other models"
+        },
+        "chunk_id": 7
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "AI systems",
+          "description": "Systems designed for artificial intelligence"
+        },
+        "predicate": "has growth rate",
+        "object": {
+          "unit": "OOMs/year",
+          "description": "Amount of memory used per unit time"
+        },
+        "chunk_id": 8
+      },
+      {
+        "subject": {
+          "name": "Training computation",
+          "description": "Computational resources used for training"
+        },
+        "predicate": "growth rate",
+        "object": {
+          "unit": "years",
+          "description": "Duration of time"
+        },
+        "chunk_id": 8
+      },
+      {
+        "subject": {
+          "name": "GPGPU",
+          "description": "Graphics processing units"
+        },
+        "predicate": "is specialized",
+        "object": {
+          "name": "TPU",
+          "description": "Terabyte Processing Unit"
+        },
+        "chunk_id": 8
+      },
+      {
+        "subject": {
+          "name": "GPUs",
+          "description": "Graphics processing units"
+        },
+        "predicate": "are common",
+        "object": {
+          "name": "TPUs",
+          "description": "Terabyte Processing Units"
+        },
+        "chunk_id": 8
+      },
+      {
+        "subject": {
+          "name": "GPU",
+          "description": "Graphics processing units"
+        },
+        "predicate": "are used",
+        "object": {
+          "name": "TPUs",
+          "description": "Terabyte Processing Units"
+        },
+        "chunk_id": 8
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "Epoch AI",
+          "description": "Source of information about training compute scaleups from GPT-2 to GPT-3 in a year"
+        },
+        "predicate": "company",
+        "object": {
+          "name": "GPT-3",
+          "description": "One of the models used for computing scaleups"
+        },
+        "chunk_id": 9
+      },
+      {
+        "subject": {
+          "name": "Epoch AI",
+          "description": "Source of information about long-run trends in GPU orders"
+        },
+        "predicate": "source of information",
+        "object": {
+          "name": "SF-rumor-mill",
+          "description": "Company that reports on rumors related to GPUs"
+        },
+        "chunk_id": 9
+      },
+      {
+        "subject": {
+          "name": "Epoch AI",
+          "description": "Source of information about GPU orders"
+        },
+        "predicate": "source of information",
+        "object": {
+          "name": "GPT-2",
+          "description": "Model used for generating GPU orders"
+        },
+        "chunk_id": 9
+      },
+      {
+        "subject": {
+          "name": "Epoch AI",
+          "description": "Source of information about GPT-3\"s performance increase\""
+        },
+        "predicate": "performance improvement",
+        "object": {
+          "name": "GPT-3",
+          "description": "Another model used for computing scaleups"
+        },
+        "chunk_id": 9
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "investments",
+          "description": "The actions of making investments"
+        },
+        "predicate": "are involved in",
+        "object": {
+          "name": "extraordinary",
+          "description": "Extremely significant"
+        },
+        "chunk_id": 10
+      },
+      {
+        "subject": {
+          "name": "investments",
+          "description": "The actions of making investments"
+        },
+        "predicate": "involves",
+        "object": {
+          "name": "moving",
+          "description": "Moving forward"
+        },
+        "chunk_id": 10
+      },
+      {
+        "subject": {
+          "name": "investments",
+          "description": "The actions of making investments"
+        },
+        "predicate": "focus on",
+        "object": {
+          "name": "IIIa",
+          "description": "Particular chapter"
+        },
+        "chunk_id": 10
+      },
+      {
+        "subject": {
+          "name": "investments",
+          "description": "The actions of making investments"
+        },
+        "predicate": "come later",
+        "object": {
+          "name": "series",
+          "description": "A sequence of events or activities"
+        },
+        "chunk_id": 10
+      }
+    ]
+  },
+  {
+    "triplets": [
+      {
+        "subject": {
+          "name": "OOMs",
+          "description": "An estimate of potential computing resources"
+        },
+        "predicate": "potential for occurrence",
+        "object": {
+          "value": "trillions of dollars"
+        },
+        "chunk_id": 11
+      },
+      {
+        "subject": {
+          "name": "cluster size",
+          "description": "Size of a computing cluster"
+        },
+        "predicate": "size",
+        "object": {
+          "value": "$10s of billions"
+        },
+        "chunk_id": 11
+      },
+      {
+        "subject": {
+          "name": "cluster size",
+          "description": "Size of a computing cluster"
+        },
+        "predicate": "size",
+        "object": {
+          "value": "$100 billion"
+        },
+        "chunk_id": 11
+      },
+      {
+        "subject": {
+          "name": "cluster size",
+          "description": "Size of a computing cluster"
+        },
+        "predicate": "size",
+        "object": {
+          "value": "+3 OOMs of compute"
+        },
+        "chunk_id": 11
+      }
+    ]
+  }
+]

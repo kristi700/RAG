@@ -92,7 +92,27 @@ class NebulaHandler:
         if result and result.rows():
             return int(result.rows()[0].values[0].get_iVal())
         return None
-
+    
+    def get_all_node_names(self):
+        query = f"""USE {self.space_name};
+            MATCH (v:entity) RETURN v.entity.name"""
+        result = self.execute_query(query)
+        node_names = result.column_values("v.entity.name")
+        try:
+            names = [n.as_string() for n in node_names]
+        except:
+            names = []
+        return names
+    
+    def get_description_by_name(self, name: str):
+        query = f'''USE {self.space_name};
+            MATCH (v:entity) WHERE v.entity.name == "{name}" RETURN v.entity.description'''
+        result= self.execute_query(query)
+        entity_description = result.column_values("v.entity.description")
+        if len(entity_description) > 0:
+            return entity_description[0].as_string()
+        return
+    
     def get_full_graph(self):
         """Fetches all nodes and edges."""
         query = """MATCH p=(v:entity)-[r]->(v1:entity) RETURN p;"""

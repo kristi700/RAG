@@ -1,8 +1,10 @@
 import re
+import json
 import nltk
 import logging
 import unicodedata
 
+from tqdm import tqdm
 from typing import List
 from pypdf import PdfReader
 from json_repair import repair_json
@@ -76,19 +78,20 @@ def sentence_chunker(text, max_tokens: int):
     
     return chunks
 
-#  https://github.com/mangiucugna/json_repair  - Maybe, maybe
-# NOTE - we dont need to make the clean and validate now imo!
 def extract_triplets(llm: LLM_wrapper, chunked_data):
-    # TODO - try outlines!
     combined_triplets = []
     failed_chunks = []
     
-    for chunk in chunked_data:
+    for chunk_id, chunk in tqdm(enumerate(chunked_data), total=len(chunked_data), desc='Triplet extraction'):
         try:
             raw_triplet_text = llm.generate_extract(chunk["content"])
             parsed_triplets = repair_json(raw_triplet_text)
-            if parsed_triplets and "triplets" in parsed_triplets:
-                combined_triplets.append(parsed_triplets)
+            as_dictionary = json.loads(parsed_triplets)
+            for triplet in as_dictionary['triplets']:
+                triplet['chunk_id'] = chunk_id
+
+            if as_dictionary and "triplets" in as_dictionary:
+                combined_triplets.append(str(as_dictionary))
             else:
                 logging.warning(f"Skipping chunk due to missing 'triplets': {raw_triplet_text}")
                 failed_chunks.append(chunk["content"])

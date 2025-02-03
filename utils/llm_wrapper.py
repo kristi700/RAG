@@ -53,6 +53,61 @@ DEFAULT_TRIPLET_EXTRACTION_PROMPT = """Given a text chunk from a document extrac
 }
 """
 
+DEFAULT_REFINEMENT_PROMPT = """Your task is to decide if the knowledge triplet extracted from a document could be refined by finding similar nodes in the graph. Use a proper JSON format!
+    Use English regardless of the input data. Make sure to follow the example output format!
+Example query:
+{
+    "document": "Philz is a coffee shop founded in 1982 in Berkeley. The café specializes in handcrafted coffee.",
+    "triplet": {
+        "subject": "Philz",
+        "predicate": "type of business",
+        "object": "coffee shop"
+    },
+    "new_nodes": [
+        {
+            "entity": "Philz",
+            "description": "The name of a coffee shop."
+        },
+        {
+            "entity": "coffee shop",
+            "description": "A place specializing in serving coffee."
+        }
+    ],
+    "existing_nodes": [
+        {
+            "entity": "Philz Coffee Shop",
+            "description": "A coffee shop located in Berkeley."
+        },
+        {
+            "entity": "Berkeley",
+            "description": "A city in California."
+        },
+        {
+            "entity": "1982",
+            "description": "A year."
+        }
+    ]
+}
+Example response:
+{
+    "reasoning": "'Philz' is likely a shorthand for 'Philz Coffee Shop.' The coffee shop node doesn't yet exist in the graph in a general sense.",
+    "refined_triplet": {
+        "subject": {
+            "name": "Philz Coffee Shop",
+            "description": "A coffee shop located in Berkeley, often referred to as 'Philz.'"
+        },
+        "predicate": "type of business",
+        "object": {
+            "name": "coffee shop",
+            "description": "A place specializing in serving coffee."
+        }
+    }
+}
+
+Provide a reasoning for your decision and suggest a refined triplet if necessary using the existing nodes, or keeping the new nodes if they are not present in the graph with a good enough precision.
+If you select an already existing node extend the description of that node with the new information provided in the document."""
+
+
 class LLM_wrapper():
     def __init__(self, model_name: str = "Qwen/Qwen2.5-0.5B-Instruct"):
         torch.set_num_threads(8) # NOTE - doesnt seem like this works ngl
@@ -61,8 +116,19 @@ class LLM_wrapper():
         #self.outlines_model = outlines.models.transformers(model_name)
 
     def generate_chat(self, user_prompt: str, context, system_prompt: str = DEFAULT_SYSTEM_PROMPT ):
-        # TODO doublecheck!
-        combined_prompt = system_prompt + context
+        # TODO - idk about this graph representationxd
+        vector_texts = "\n".join(
+            [f"{i+1}. {text}" for i, text in enumerate(context.get("vector_context", []))]
+        )
+        graph_texts = []
+        for entry in context.get("graph_context", []):
+            graph_texts.append(
+                f"- **{entry['source']}** ({entry['source_description']})\n"
+                f"  - **{entry['relationship']}** → *{entry['target']}* ({entry['target_description']})"
+            )
+
+        graph_text = "\n".join(graph_texts)
+        combined_prompt = system_prompt + graph_text + vector_texts
         
         messages = [
             {"role": "system", "content": combined_prompt},
@@ -87,4 +153,15 @@ class LLM_wrapper():
         generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)]
 
         return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        
+    
+    # TODO - refactor into 1 func with generate_extract!!
+    def refine_triplet(self, data, refinement_prompt:str = DEFAULT_REFINEMENT_PROMPT):
+        messages = [{"role": "system", "content": refinement_prompt},
+                    {"role": "user", "content": str(data)}
+                    ]
+        text = self.tokenizer.apply_chat_template(messages, tokenize=False,add_generation_prompt=True)
+        model_inputs = self.tokenizer([text], return_tensors="pt").to(self.model.device)
+        generated_ids = self.model.generate(**model_inputs, max_new_tokens=10000)
+        generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)]
+
+        return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]

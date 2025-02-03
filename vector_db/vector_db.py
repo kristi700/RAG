@@ -49,7 +49,7 @@ class WeaviateVectorDatabase:
         collection = self.client.collections.get(collection_name)
 
         with collection.batch.dynamic() as batch:
-            for i, document in tqdm(enumerate(documents)):
+            for i, document in tqdm(enumerate(documents), total=len(documents)):
                 if embeddings:
                     batch.add_object(properties = document, vector=embeddings[i])
                 else:
@@ -90,6 +90,34 @@ class WeaviateVectorDatabase:
         else:
             syslog.syslog("No filter nor id were provided! No deletion has been done.")
 
+    def upsert_entity(self, collection_name: str, entity_name: str, entity_description: str, vid: str, text: str):
+        """
+        Upserts (inserts or updates) an entity into the specified collection with its metadata.
+        """
+        data_object = {
+            "name": entity_name,
+            "description": entity_description,
+            "texts": text
+        }
+        # TODO - needs testing!
+        try:
+            existing_object = self.client.data.get(uuid=vid)
+            
+            if existing_object:
+                self.client.data.update(
+                    properties=data_object,
+                    uuid=vid,
+                )
+                syslog.syslog(f"Updated entity '{entity_name}' with id {vid} in collection '{collection_name}'.")
+            else:
+                self.client.data.create(
+                    properties=data_object,
+                    uuid=vid,
+                )
+                syslog.syslog(f"Created entity '{entity_name}' with id {vid} in collection '{collection_name}'.")
+                
+        except Exception as e:
+            syslog.syslog(f"Error upserting entity '{entity_name}' with id {vid}: {e}")
 
     def _assert_collection_not_exists(self, collection_name: str):
         existing_collections = self._get_collection_names()
