@@ -3,14 +3,20 @@ import argparse
 import weaviate.classes as wvc
 
 from utils import preprocess
+from utils.chat import chat_loop
 from utils.llm_wrapper import LLM_wrapper
 from graph_db.graph_db import NebulaHandler
-from rag.context_retrieval import get_context
-from vector_db.vector_db import WeaviateVectorDatabase
 from rag.data_ingestion import upload_to_dbs
+from vector_db.vector_db import WeaviateVectorDatabase
+
+# TODO - implement saving/caching the built graph and vector dbs so one doesnt have to recreate them all the time
+# or at least save the refinmed triplets to save time on that (if pdf and llm are the same)
 
 # NOTE - add LLM choice
 # NOTE - add context file type - pdf, txt...
+# NOTE - agents - like what tool to use - graph, vector or internet(?)
+# NOTE - implement chat function
+# NOTE - add memory to chat
 
 def parse_args() -> argparse.Namespace:
     """
@@ -25,8 +31,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_known_args()
 
 
-# TODO - make all upload func batch upload compatible - for multiple pdfs!
-# TODO - make the format of the data the same as in the dummy_data.json (combine chunked + raw + triplets)
+# TODO - make all upload func batch upload compatible - for multiple pdfs(?) - not sure i wanna implement this, some new technology would be nicer 
 def main():
     args, _ = parse_args()
     collection_name = 'context_data'
@@ -58,10 +63,9 @@ def main():
     graph_db.recreate_space()
 
     upload_to_dbs(llm, vector_db, graph_db, collection_name, combined_data[0]) # [0] as it only works with 1 doc as of rightnow
-
-    context = get_context(graph_db, vector_db, args.question)
     
-    print(llm.generate_chat(user_prompt=args.question, context=context))
+    # TODO - create a multi turn chat!
+    chat_loop(llm, graph_db, vector_db)
 
     # Cleanup
     vector_db.delete_collection(collection_name)

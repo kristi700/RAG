@@ -27,8 +27,20 @@ def get_context(graph_db: NebulaHandler, vector_db: WeaviateVectorDatabase, user
             graph_entities,
             max_depth=graph_depth
         )
+
+    vector_texts = "\n".join(
+        [f"{i+1}. {text}" for i, text in enumerate(context.get("vector_context", []))]
+    )
+    graph_texts = []
+    for entry in context.get("graph_context", []):
+        graph_texts.append(
+            f"- **{entry['source']}** ({entry['source_description']})\n"
+            f"  - **{entry['relationship']}** → *{entry['target']}* ({entry['target_description']})"
+        )
+
+    graph_texts = "\n".join(graph_texts)
     
-    return context
+    return {"graph_context": graph_texts, "vector_context": vector_texts}
 
 def _find_related_entities(graph_db: NebulaHandler, query: str, max_entities: int = 5) -> List[Dict]:
     result = graph_db.execute_query(
