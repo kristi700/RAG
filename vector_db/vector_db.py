@@ -4,6 +4,7 @@ import weaviate.classes as wvc
 
 from tqdm import tqdm
 from typing import List, Dict, Optional
+from weaviate.util import generate_uuid5
 from weaviate.classes.query import Filter
 class WeaviateVectorDatabase:
     def __init__(self, host: str, port: int):
@@ -97,22 +98,22 @@ class WeaviateVectorDatabase:
         data_object = {
             "name": entity_name,
             "description": entity_description,
-            "texts": text
+            "content": text
         }
-        # TODO - needs testing!
+        collection = self.client.collections.get(collection_name)
         try:
-            existing_object = self.client.data.get(uuid=vid)
+            existing_object = collection.query.fetch_object_by_id(generate_uuid5(vid)) # TODO
             
             if existing_object:
-                self.client.data.update(
+                collection.data.update(
                     properties=data_object,
-                    uuid=vid,
+                    uuid=generate_uuid5(vid),
                 )
                 syslog.syslog(f"Updated entity '{entity_name}' with id {vid} in collection '{collection_name}'.")
             else:
-                self.client.data.create(
+                collection.data.insert(
                     properties=data_object,
-                    uuid=vid,
+                    uuid=generate_uuid5(vid),
                 )
                 syslog.syslog(f"Created entity '{entity_name}' with id {vid} in collection '{collection_name}'.")
                 

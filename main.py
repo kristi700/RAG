@@ -55,8 +55,8 @@ def main():
     combined_data = [{"doc_id": 1, "text": extracted_text, 'chunks': combined_chunks['chunks'], 'triplets': all_triplets["triplets"]}] # Only one doc for now
 
     properties = [
-        wvc.config.Property(name="doc_id", data_type=wvc.config.DataType.INT),
-        wvc.config.Property(name="chunk_id", data_type=wvc.config.DataType.INT),
+        wvc.config.Property(name="name", data_type=wvc.config.DataType.TEXT),
+        wvc.config.Property(name="description", data_type=wvc.config.DataType.TEXT),
         wvc.config.Property(name="content", data_type=wvc.config.DataType.TEXT),
     ]
     vector_db.create_collection(collection_name=collection_name, properties=properties)

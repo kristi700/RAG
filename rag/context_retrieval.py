@@ -1,8 +1,9 @@
+from fuzzywuzzy import fuzz
 from typing import List, Dict, Optional
 from graph_db.graph_db import NebulaHandler
 from vector_db.vector_db import WeaviateVectorDatabase
 
-def get_context(graph_db: NebulaHandler, vector_db: WeaviateVectorDatabase, user_prompt: str,doc_id: Optional[int] = None, vector_top_k: int = 3,graph_depth: int = 2)-> Dict[str, List]:
+def get_context(graph_db: NebulaHandler, vector_db: WeaviateVectorDatabase, user_prompt: str, vector_top_k: int = 3,graph_depth: int = 2)-> Dict[str, List]:
     context = {"vector_context": [], "graph_context": []}
     vector_response = vector_db.search(
         collection_name='context_data',
@@ -10,13 +11,7 @@ def get_context(graph_db: NebulaHandler, vector_db: WeaviateVectorDatabase, user
         top_k=vector_top_k
     )
 
-    if doc_id is not None:
-        vector_context = [
-            item.properties['content'] for item in vector_response.objects
-            if item.properties.get('doc_id') == doc_id
-        ]
-    else:
-        vector_context = [item.properties['content'] for item in vector_response.objects]
+    vector_context = [f"Entity: {item.properties['name']},\n Description: {item.properties['description']},\n Content: {item.properties['content']}" for item in vector_response.objects]
     
     context["vector_context"] = vector_context
     graph_entities = _find_related_entities(graph_db, user_prompt)
@@ -28,6 +23,7 @@ def get_context(graph_db: NebulaHandler, vector_db: WeaviateVectorDatabase, user
             max_depth=graph_depth
         )
 
+    # TODO - fix
     vector_texts = "\n".join(
         [f"{i+1}. {text}" for i, text in enumerate(context.get("vector_context", []))]
     )
@@ -42,7 +38,7 @@ def get_context(graph_db: NebulaHandler, vector_db: WeaviateVectorDatabase, user
     
     return {"graph_context": graph_texts, "vector_context": vector_texts}
 
-def _find_related_entities(graph_db: NebulaHandler, query: str, max_entities: int = 5) -> List[Dict]:
+def _find_related_entities(graph_db: NebulaHandler, query: str, max_entities: int = 5, threshold: int = 70) -> List[Dict]:
     result = graph_db.execute_query(
         "LOOKUP ON entity YIELD id(vertex) AS vid, properties(vertex).name AS name, "
         "properties(vertex).description AS description"
@@ -62,20 +58,27 @@ def _find_related_entities(graph_db: NebulaHandler, query: str, max_entities: in
     query_keywords = set(query.lower().split())
     relevant_entities = []
     
-
     # NOTE - do we only get entity name?
     for entity in entities:
-        desc = entity.get('description', '').lower().decode()
-        score = len(query_keywords.intersection(set(desc.split())))
-        if score > 0:
+        name_score = _fuzzy_match(query_keywords, entity["name"])
+        desc_score = _fuzzy_match(query_keywords, entity["description"])
+        if name_score > threshold or desc_score > threshold:
             relevant_entities.append({
                 'id': entity['id'],
                 'name': entity['name'],
-                'score': score
+                'score': name_score if name_score > threshold else desc_score
             })
 
     return sorted(relevant_entities, key=lambda x: x['score'], reverse=True)[:max_entities]
 
+def _fuzzy_match(query_keywords, text):
+    """Returns the highest fuzzy match score between the query and a given text."""
+    if isinstance(text, bytes):
+        text = text.decode("utf-8")
+
+    text = text.lower()
+    scores = [fuzz.partial_ratio(q, text) for q in query_keywords]
+    return max(scores) if scores else 0
 
 def _get_entity_relations(graph_db: NebulaHandler, entities: List[Dict], max_depth: int = 2) -> List[Dict]:
     relations = []
