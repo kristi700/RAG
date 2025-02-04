@@ -36,7 +36,7 @@ def chat_loop(llm: LLM_wrapper, graph_db: NebulaHandler, vector_db: WeaviateVect
         
         context = get_context(graph_db, vector_db, current_query)
         prompt = build_chat_prompt(conversation_history, current_query, context)
-        assistant_response = llm.generate_chat(user_prompt=prompt, context=context)
+        assistant_response = llm.generate_text(user_prompt=prompt, context=context)
         
         print("Assistant:", assistant_response)
 

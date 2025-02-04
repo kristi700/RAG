@@ -58,7 +58,7 @@ class WeaviateVectorDatabase:
         if len(collection.batch.failed_objects) > 0:
             syslog.syslog(f"Failed to import {len(collection.batch.failed_objects)} objects")
 
-    def search(self, collection_name: str, query: List[float], top_k: int = 5, search_type:str='semantic', filters: Optional[Dict] = None) -> List[Dict]:
+    def search(self, collection_name: str, query: str, top_k: int = 5, search_type:str='semantic', filters: Optional[Dict] = None) -> List[Dict]:
         """
         Search the collection using a query vector with optional filters.
         """
