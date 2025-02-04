@@ -9,6 +9,8 @@ from graph_db.graph_db import NebulaHandler
 from rag.data_ingestion import upload_to_dbs
 from vector_db.vector_db import WeaviateVectorDatabase
 
+# TODO - stg needs to be done regarding the collection name variable - useless to keep passing it back and forth!
+
 # TODO - implement saving/caching the built graph and vector dbs so one doesnt have to recreate them all the time
 # or at least save the refinmed triplets to save time on that (if pdf and llm are the same)
 
@@ -26,7 +28,6 @@ def parse_args() -> argparse.Namespace:
         argparse.Namespace: The parsed arguments.
     """
     parser = argparse.ArgumentParser(description="Settings for RAG")
-    parser.add_argument("question", help="User question to answer with context")
     parser.add_argument("pdf_path", help="PDF file to use as context for the LLM")
     return parser.parse_known_args()
 
