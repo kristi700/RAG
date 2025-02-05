@@ -1,8 +1,5 @@
 from typing import List
 from utils.llm_wrapper import LLM_wrapper
-from graph_db.graph_db import NebulaHandler
-from rag.context_retrieval import get_context
-from vector_db.vector_db import WeaviateVectorDatabase
 
 def get_history(conversation_history: List[str]):
     history_text = ""
