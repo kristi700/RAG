@@ -12,7 +12,7 @@ def get_history(conversation_history: List[str]):
 
 
 # NOTE - maybe context should be updated!
-def chat_loop(llm: LLM_wrapper, graph_db: NebulaHandler, vector_db: WeaviateVectorDatabase):
+def chat_loop(llm: LLM_wrapper, context_agent):
     """
     Run an interactive multi-turn chat session.
     """
@@ -24,7 +24,7 @@ def chat_loop(llm: LLM_wrapper, graph_db: NebulaHandler, vector_db: WeaviateVect
         if current_query.lower() in ("exit", "quit"):
             break
         
-        context = get_context(graph_db, vector_db, current_query)
+        context = context_agent.run(current_query)
         history = get_history(conversation_history)
         assistant_response = llm.generate_chat(user_prompt=current_query, context=context, history=history)
         

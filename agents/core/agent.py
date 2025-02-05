@@ -12,9 +12,6 @@ class AgentBase(ABC):
         self.tools = tools if tools is not None else {}
         self.memory = [] # TODO - check for better ways to utilize memory!
 
-    def register_tool(self, tool):
-        self.tools[tool.tool_name] = tool
-
     def run(self, user_input: str) -> str:
         prompt = f"{self.system_prompt}\n\nUser: {user_input}\nAgent:"
         response = self.llm.generate_text(prompt)

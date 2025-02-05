@@ -115,10 +115,17 @@ class LLM_wrapper():
         self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype="auto", token=PRIVATE_TOKEN)
         #self.outlines_model = outlines.models.transformers(model_name)
 
+    def vanilla_generate(self, prompt: str):
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(self.model.device)
+        generated_ids = self.model.generate(**model_inputs, max_new_tokens=512)
+        generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)]
+
+        return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
     def generate_chat(self, user_prompt: str, context, history, system_prompt: str = DEFAULT_SYSTEM_PROMPT ):
 
         # TODO - refine!
-        combined_prompt = f"{system_prompt} + Graph Context:{context['graph_context']}\n + Vector Context:{context['vector_context']}\n + Chat history:{history}"
+        combined_prompt = f"{system_prompt} + Graph Context:{context['graph_db']}\n + Vector Context:{context['vector_db']}\n + Chat history:{history}"
         
         messages = [
             {"role": "system", "content": combined_prompt},

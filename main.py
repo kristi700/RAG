@@ -7,7 +7,10 @@ from utils.chat import chat_loop
 from utils.llm_wrapper import LLM_wrapper
 from graph_db.graph_db import NebulaHandler
 from rag.data_ingestion import upload_to_dbs
+from agents.tools.graph_search import GraphSearchTool
+from agents.tools.vector_search import VectorSearchTool
 from vector_db.vector_db import WeaviateVectorDatabase
+from agents.custom_agents.context_retrieval_agent import ContextRetrievalAgent
 
 # TODO - stg needs to be done regarding the collection name variable - useless to keep passing it back and forth!
 
@@ -39,7 +42,7 @@ def main():
 
     vector_db = WeaviateVectorDatabase(host='host.docker.internal',port='8080')
     graph_db = NebulaHandler(space_name=collection_name, host='host.docker.internal', port=9669)
-    llm = LLM_wrapper(model_name="Qwen/Qwen2.5-0.5B-Instruct")
+    llm = LLM_wrapper(model_name="Qwen/Qwen2.5-1.5B-Instruct")
 
     extracted_text = preprocess.parse_pdf(args.pdf_path, is_sentence_split=True)
     chunked_data = preprocess.sentence_chunker(extracted_text, max_tokens=64)
@@ -65,8 +68,22 @@ def main():
 
     upload_to_dbs(llm, vector_db, graph_db, collection_name, combined_data[0]) # [0] as it only works with 1 doc as of rightnow
     
+
+    ####TMP####
+    vector_tool = VectorSearchTool(collection_name, vector_db, top_k=3)
+    graph_tool = GraphSearchTool(graph_db, graph_depth=3)
+    
+    # Create agent
+    context_agent = ContextRetrievalAgent(
+        llm=llm,
+        vector_tool=vector_tool,
+        graph_tool=graph_tool)
+    ####TMP####
+    
+
+
     # TODO - create a multi turn chat!
-    chat_loop(llm, graph_db, vector_db)
+    chat_loop(llm, context_agent)
 
     # Cleanup
     vector_db.delete_collection(collection_name)
