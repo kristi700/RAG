@@ -115,8 +115,10 @@ class LLM_wrapper():
         self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype="auto", token=PRIVATE_TOKEN)
         #self.outlines_model = outlines.models.transformers(model_name)
 
-    def generate_text(self, user_prompt: str, context = None, system_prompt: str = DEFAULT_SYSTEM_PROMPT ):
-        combined_prompt = system_prompt + context["graph_context"] + context["vector_context"] if context else system_prompt
+    def generate_chat(self, user_prompt: str, context, history, system_prompt: str = DEFAULT_SYSTEM_PROMPT ):
+
+        # TODO - refine!
+        combined_prompt = f"{system_prompt} + Graph Context:{context['graph_context']}\n + Vector Context:{context['vector_context']}\n + Chat history:{history}"
         
         messages = [
             {"role": "system", "content": combined_prompt},

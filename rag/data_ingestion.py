@@ -1,54 +1,11 @@
 import nltk
-import json
 import syslog
-import logging
 
 from tqdm import tqdm
 from random import shuffle
-from json_repair import repair_json
 from utils.llm_wrapper import LLM_wrapper
 from graph_db.graph_db import NebulaHandler
 from vector_db.vector_db import WeaviateVectorDatabase
-
-def insert_data_to_graphdb(graph_db: NebulaHandler, collection_name: str, all_docs):
-    graph_db.switch_space(space_name=collection_name)
-    for doc in all_docs:
-        doc_triplets = doc["triplets"]
-
-        for trip in doc_triplets:
-            try:
-                subject = trip["subject"]
-                predicate = trip["predicate"]
-                obj = trip["object"]
-
-                subject_name = subject["name"]
-                subject_desc = subject.get("description", "")
-                
-                object_name = obj["name"]
-                object_desc = obj.get("description", "")
-
-                graph_db.upsert_entity_relationship(
-                    src_name=subject_name,
-                    src_description=subject_desc,
-                    dst_name=object_name,
-                    dst_description=object_desc,
-                    relationship=predicate
-                )
-            except Exception as e:
-                logging.error(f"Malformed triplet, skipping - {trip}")
-
-def insert_data_to_vectordb(vector_db: WeaviateVectorDatabase, collection_name: str, all_docs):
-    documents_to_insert = []
-    for doc in all_docs:
-        doc_id = doc["doc_id"]
-        for chunk in doc["chunks"]:
-            documents_to_insert.append({
-                "doc_id": doc_id,
-                "chunk_id": chunk["chunk_id"],
-                "content": chunk["content"]
-            })
-
-    vector_db.add_documents(collection_name, documents_to_insert)
 
 def is_valid_triplet(triplet):
     # NOTE - restriction to have only these keys could be useful(?)
@@ -77,7 +34,7 @@ def find_similar_graph_nodes(collection_name: str, graph_db: NebulaHandler, vect
 
     result = vector_db.search(collection_name, entity['description'], top_k=top_k)
     for obj in result.objects:
-        close_matches.append(obj["name"])
+        close_matches.append(obj.properties['name'])
 
     return close_matches
 
@@ -86,7 +43,7 @@ def upload_to_dbs(llm: LLM_wrapper, vector_db: WeaviateVectorDatabase, graph_db:
     for triplet in tqdm(combined_data['triplets'], desc="Triplet refinement and DB upload"):
         try:
             if not is_valid_triplet(triplet):
-                print(f"Invalid triplet: {triplet}")
+                #print(f"Invalid triplet: {triplet}")
                 continue
 
             existing_subject_nodes = find_similar_graph_nodes(collection_name, graph_db, vector_db, triplet['subject'])
@@ -106,11 +63,12 @@ def upload_to_dbs(llm: LLM_wrapper, vector_db: WeaviateVectorDatabase, graph_db:
             data["triplet"] = {"subject": triplet['subject']['name'], "predicate": triplet['predicate'], "object": triplet['object']['name']}
             data["new_nodes"] = [{"entity": triplet['subject']['name'], "description": triplet['subject']['description']}, {"entity": triplet['object']['name'], "description": triplet['object']['description']}]
             data["existing_nodes"] = [{"entity": similar, "description": description} for similar, description in zip(similars, descriptions)]
-
+            """
             response = llm.refine_triplet(data)
             repaired_response = repair_json(response)
             json_response = json.loads(repaired_response)
-
+            """
+            json_response = {'refined_triplet': triplet}
             final_triplet = {
                 "subject": json_response['refined_triplet']["subject"]["name"],
                 "predicate": json_response['refined_triplet']["predicate"],
@@ -130,8 +88,9 @@ def upload_to_dbs(llm: LLM_wrapper, vector_db: WeaviateVectorDatabase, graph_db:
 
             subj_vid, obj_vid = graph_db.upsert_entity_relationship(subj, subj_desc, obj, obj_desc, pred)
 
-            vector_db.upsert_entity(collection_name, subj, subj_desc, subj_vid, combined_data['chunks'][triplet['chunk_id']])
-            vector_db.upsert_entity(collection_name, obj, obj_desc, obj_vid, combined_data['chunks'][triplet['chunk_id']])
+            # TODO - try with refined triplets as well!! - it only from data.json now!
+            vector_db.upsert_entity(collection_name, subj, subj_desc, subj_vid, combined_data['chunks'][triplet['chunk_id']]['content'])
+            vector_db.upsert_entity(collection_name, obj, obj_desc, obj_vid, combined_data['chunks'][triplet['chunk_id']]['content'])
 
         except Exception as e:
             syslog.syslog(f"Exception {e} occured.") # NOTE - stg more refined could be nice(!)
